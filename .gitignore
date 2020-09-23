@@ -1,2 +1,4 @@
 *.hdf5
 history/
+.idea/
+__pycache__/
