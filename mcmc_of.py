@@ -133,27 +133,39 @@ class MCMCOpticalFlow:
         u[:, 0] = np.zeros(self.nm)
         v[:, 0] = np.zeros(self.nm)
 
+        # Keep these in memory to improve efficiency
+        lamb_last = 1
+        delt_last = 1
+        u_last = np.zeros(self.nm)
+        v_last = np.zeros(self.nm)
+
         for i in range(1, num):
             # Sample u
             # Ju = lamb * Fx.T @ Fx + delt * Q
             # hu = lamb * Fx.T @ (d - Fy @ v)
             Mu = [self.Fx, self.Qx, self.Qy]
-            r = np.vstack((lamb[i - 1] * np.ones(self.nm), delt[i - 1] * np.ones(self.nm), delt[i - 1] * np.ones(self.nm))).T
-            mu = np.vstack((self.d - self.Fy @ v[:, i - 1], np.zeros(self.nm), np.zeros(self.nm))).T
-            u[:, i] = sample_PO(Mu, r, mu)
+            r = np.vstack((lamb_last * np.ones(self.nm), delt_last * np.ones(self.nm), delt_last * np.ones(self.nm))).T
+            mu = np.vstack((self.d - self.Fy @ v_last, np.zeros(self.nm), np.zeros(self.nm))).T
+            u_last = sample_PO(Mu, r, mu)
 
             # Sample v
             # Jv = lamb * Fy.T @ Fy + delt * Q
             # hv = lamb * Fy.T @ (d - Fx @ u)
             Mv = [self.Fy, self.Qx, self.Qy]
-            mv = np.vstack((self.d - self.Fx @ u[:, i], np.zeros(self.nm), np.zeros(self.nm))).T
-            v[:, i] = sample_PO(Mv, r, mv)
+            mv = np.vstack((self.d - self.Fx @ u_last, np.zeros(self.nm), np.zeros(self.nm))).T
+            v_last = sample_PO(Mv, r, mv)
 
             # Sample lambda and delta
-            x = self.d - self.Fx @ u[:, i] - self.Fy @ v[:, i]
-            lamb[i] = np.random.gamma(self.a1 + self.nm / 2, scale=1 / (self.b1 + (x.T @ x) / 2))
-            delt[i] = np.random.gamma(self.a2 + self.nm,
-                scale=1 / (self.b2 + (u[:, i].T @ self.Q @ u[:, i] + v[:, i].T @ self.Q @ v[:, i]) / 2))
+            x = self.d - self.Fx @ u_last - self.Fy @ v_last
+            lamb_last = np.random.gamma(self.a1 + self.nm / 2, scale=1 / (self.b1 + (x.T @ x) / 2))
+            delt_last = np.random.gamma(self.a2 + self.nm,
+                scale=1 / (self.b2 + (u_last.T @ self.Q @ u_last + v_last.T @ self.Q @ v_last) / 2))
+
+            # Only now write everything into the array
+            u[:, i] = u_last
+            v[:, i] = v_last
+            lamb[i] = lamb_last
+            delt[i] = delt_last
 
             # Print something..
             if i % 50 == 0:

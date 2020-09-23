@@ -17,6 +17,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mcmc_of import MCMCOpticalFlow
 from generate_sample_images import generate_sample_images
+import time
 
 # Generate test images
 N = 20  # rows
@@ -27,7 +28,10 @@ F, G, U, V = generate_sample_images(N, M, magnitude=1)
 num = 3000
 skip = 1000
 of = MCMCOpticalFlow(F, G)
-u, v, lamb, delt = of.run(num)
+start = time.time()
+u, v, lamb, delt = of.run(num, hdf5_file='samples.hdf5')
+end = time.time()
+print('Elapsed time: ', end-start)
 
 # Calculate the MMSE (minimum mean squared error) estimate (mean)
 u_mmse = np.mean(u[:, skip-1:num-1], axis=1)
