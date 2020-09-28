@@ -20,7 +20,7 @@ from generate_sample_images import generate_sample_images
 import time
 
 # Generate test images
-N = 20  # rows
+N = 30  # rows
 M = 20  # cols
 F, G, U, V = generate_sample_images(N, M, magnitude=1)
 
@@ -29,7 +29,7 @@ num = 3000
 skip = 1000
 of = MCMCOpticalFlow(F, G)
 start = time.time()
-u, v, lamb, delt = of.run(num, hdf5_file='samples.hdf5')
+u, v, lamb, delt = of.run(num)
 end = time.time()
 print('Elapsed time: ', end-start)
 
@@ -50,7 +50,7 @@ std = np.sqrt(U_var + V_var)    # Combine the variances somehow to get an idea o
 ep_err = np.sqrt((U - U_mmse)**2 + (V - V_mmse)**2)
 
 fig, ax = plt.subplots(2, 2, figsize=(8, 8))
-X, Y = np.meshgrid(np.arange(N), np.arange(M), indexing='xy')
+X, Y = np.meshgrid(np.arange(M), np.arange(N), indexing='xy')
 ax[0, 0].set_title('MMSE estimate')
 ax[0, 0].quiver(X, Y, U_mmse, V_mmse)
 ax[0, 1].set_title('Ground truth')
